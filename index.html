@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Participants Analysis Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .stats-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        /* Chart Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(800px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* Chart Card */
+        .chart-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .chart-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .chart-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+        }
+
+        .chart-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .chart-description {
+            font-size: 0.95em;
+            opacity: 0.95;
+            line-height: 1.5;
+        }
+
+        .chart-content {
+            padding: 20px;
+            background: #fafafa;
+        }
+
+        .chart-iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 10px;
+            background: white;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .filter-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .filter-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Footer */
+        .footer {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            margin-top: 30px;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 850px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .chart-iframe {
+                height: 450px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Participants Analysis Dashboard</h1>
+            <p>Complete visual analysis of participant data including demographics, geography, and promotion stages</p>
+            <div class="stats-badge" id="chartCount"></div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-title">🔍 Filter Charts</div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All Charts</button>
+                <button class="filter-btn" data-filter="distribution">Distribution</button>
+                <button class="filter-btn" data-filter="geographic">Geographic</button>
+                <button class="filter-btn" data-filter="demographic">Demographic</button>
+                <button class="filter-btn" data-filter="trend">Trends</button>
+                <button class="filter-btn" data-filter="flow">Flow/Relationships</button>
+            </div>
+        </div>
+
+        <div class="charts-grid" id="chartsGrid">
+            <div class="loading">Loading charts...</div>
+        </div>
+
+        <div class="footer">
+            <p>Interactive Dashboard | All charts are interactive - hover, zoom, and explore data insights</p>
+            <p style="margin-top: 10px; font-size: 0.85em;">Generated from participant scraping and analysis | Total charts: <span id="footerChartCount"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Add your charts here
+        const chartsConfig = [
+           {
+            "title": "",
+            "description": "",
+            "file": "fig.html",
+            "category": ""
+        },
+        {
+            "title": "",
+            "description": "",
+            "file": "fig2.html",
+            "category": ""
+        },
+        {
+            "title": "",
+            "description": "",
+            "file": "fig3.html",
+            "category": ""
+        },
+        {
+            "title": "",
+            "description": "",
+            "file": "fig4.html",
+            "category": ""
+        },
+        {
+            "title": "",
+            "description": "",
+            "file": "fig5.html",
+            "category": ""
+        },
+        {
+            "title": "",
+            "description": "",
+            "file": "fig8.html",
+            "category": ""
+        },
+        {
+            "title": "",
+            "description": "",
+            "file": "fig9.html",
+            "category": ""
+        },
+        {
+            "title": "",
+            "description": "",
+            "file": "fig10.html",
+            "category": ""
+        },
+        {
+            "title": "",
+            "description": "",
+            "file": "fig12.html",
+            "category": ""
+        },
+        {
+            "title": "",
+            "description": "",
+            "file": "fig14.html",
+            "category": ""
+        },
+        {
+            "title": "",
+            "description": "",
+            "file": "fig15.html",
+            "category": ""
+        },
+        {
+            "title": "",
+            "description": "",
+            "file": "fig16.html",
+            "category": ""
+        },
+        {
+            "title": "",
+            "description": "",
+            "file": "fig17.html",
+            "category": ""
+        }
+        ];
+
+        // Load and display charts
+        function loadCharts(filter = "all") {
+            const grid = document.getElementById("chartsGrid");
+            grid.innerHTML = "";
+            
+            const filteredCharts = filter === "all" 
+                ? chartsConfig 
+                : chartsConfig.filter(chart => chart.category === filter);
+            
+            if (filteredCharts.length === 0) {
+                grid.innerHTML = '<div class="loading" style="background: white; border-radius: 15px;">No charts found in this category.</div>';
+                return;
+            }
+            
+            filteredCharts.forEach((chart, index) => {
+                const chartCard = document.createElement("div");
+                chartCard.className = "chart-card";
+                chartCard.setAttribute("data-category", chart.category);
+                
+                chartCard.innerHTML = `
+                    <div class="chart-header">
+                        <div class="chart-title">${chart.title}</div>
+                        <div class="chart-description">${chart.description}</div>
+                    </div>
+                    <div class="chart-content">
+                        <iframe class="chart-iframe" id="iframe-${index}" src="${chart.file}" loading="lazy"></iframe>
+                    </div>
+                `;
+                
+                grid.appendChild(chartCard);
+            });
+            
+            // Update chart count display
+            document.getElementById("chartCount").innerText = `📈 ${filteredCharts.length} Charts Loaded`;
+            document.getElementById("footerChartCount").innerText = filteredCharts.length;
+        }
+        
+        // Filter functionality
+        document.querySelectorAll(".filter-btn").forEach(btn => {
+            btn.addEventListener("click", function() {
+                document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+                this.classList.add("active");
+                const filter = this.getAttribute("data-filter");
+                loadCharts(filter);
+            });
+        });
+        
+        // Initial load
+        loadCharts("all");
+    </script>
+</body>
+</html>
